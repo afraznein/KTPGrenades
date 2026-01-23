@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.1] - 2026-01-23
+
+### Fixed
+- **INI parser bug** - Config parser incorrectly included `=` character in class name
+  - Caused all classes to fail matching (logged as "Unknown class 'garand ='")
+  - Fixed by correcting `copy()` length parameter from `eq + 1` to `eq`
+
+---
+
 ## [1.0.0] - 2026-01-22
 
 ### Added
@@ -30,4 +39,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+[1.0.1]: https://github.com/afraznein/KTPGrenadeLoadout/releases/tag/v1.0.1
 [1.0.0]: https://github.com/afraznein/KTPGrenadeLoadout/releases/tag/v1.0.0

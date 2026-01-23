@@ -1,6 +1,6 @@
 # KTP Grenade Loadout
 
-**Version 1.0.0** - Per-class grenade loadout configuration for Day of Defeat servers
+**Version 1.0.1** - Per-class grenade loadout configuration for Day of Defeat servers
 
 An AMX Mod X plugin that allows server administrators to customize grenade counts per class via INI configuration file.
 

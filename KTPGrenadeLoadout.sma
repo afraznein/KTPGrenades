@@ -1,9 +1,9 @@
-/* KTP Grenade Loadout v1.0.0
+/* KTP Grenade Loadout v1.0.1
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.0
- * DATE: 2026-01-22
+ * VERSION: 1.0.1
+ * DATE: 2026-01-23
  *
  * ========== FEATURES ==========
  * - Configure grenade counts per class via INI file
@@ -37,6 +37,9 @@
  *
  * ========== CHANGELOG ==========
  *
+ * v1.0.1 (2026-01-23) - Config Parsing Fix
+ *   * FIXED: INI parser incorrectly included '=' in class name
+ *
  * v1.0.0 (2026-01-22) - Initial Release
  *   + ADDED: INI-based grenade loadout configuration
  *   + ADDED: Per-class grenade counts for all DoD classes
@@ -50,7 +53,7 @@
 #include <dodconst>
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION "1.0.1"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Grenade weapon IDs from dodconst.inc
@@ -221,7 +224,7 @@ load_config() {
         if (eq < 1)
             continue;
 
-        copy(key, eq + 1, line);
+        copy(key, eq, line);
         copy(value, charsmax(value), line[eq + 1]);
         trim(key);
         trim(value);
