@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.2] - 2026-01-23
+
+### Fixed
+- **Client HUD not showing modified grenade count** - After setting grenade ammo, client HUD displayed the default value instead of the configured value
+  - Now uses `dodx_send_ammox` native to send AmmoX message and sync client HUD
+  - Requires KTPAMXX 2.6.6+ with new `dodx_send_ammox` native
+
+### Added
+- **Version echo to player** - Displays plugin name and version in chat 5 seconds after player connects
+
+---
+
 ## [1.0.1] - 2026-01-23
 
 ### Fixed
@@ -39,5 +51,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+[1.0.2]: https://github.com/afraznein/KTPGrenadeLoadout/releases/tag/v1.0.2
 [1.0.1]: https://github.com/afraznein/KTPGrenadeLoadout/releases/tag/v1.0.1
 [1.0.0]: https://github.com/afraznein/KTPGrenadeLoadout/releases/tag/v1.0.0

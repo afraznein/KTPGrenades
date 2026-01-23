@@ -1,6 +1,6 @@
 # KTP Grenade Loadout
 
-**Version 1.0.1** - Per-class grenade loadout configuration for Day of Defeat servers
+**Version 1.0.2** - Per-class grenade loadout configuration for Day of Defeat servers
 
 An AMX Mod X plugin that allows server administrators to customize grenade counts per class via INI configuration file.
 
@@ -18,9 +18,10 @@ An AMX Mod X plugin that allows server administrators to customize grenade count
 
 ## Requirements
 
-- **KTPAMXX** with DODX module containing grenade ammo natives:
+- **KTPAMXX 2.6.6+** with DODX module containing grenade ammo natives:
   - `dodx_set_grenade_ammo()`
   - `dodx_get_grenade_ammo()`
+  - `dodx_send_ammox()`
 
 ---
 
@@ -126,7 +127,7 @@ classname = count
 
 ## Technical Notes
 
-- Grenades are set 0.2 seconds after spawn to ensure the default loadout has been applied first
+- Grenades are set 0.5 seconds after spawn to ensure the default loadout has been applied first
 - The plugin hooks `dod_client_spawn` forward from DODX module
 - Grenade types are automatically determined by team:
   - Allies (US): Hand Grenade

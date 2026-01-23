@@ -1,8 +1,8 @@
-/* KTP Grenade Loadout v1.0.1
+/* KTP Grenade Loadout v1.0.2
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.1
+ * VERSION: 1.0.2
  * DATE: 2026-01-23
  *
  * ========== FEATURES ==========
@@ -12,7 +12,7 @@
  * - Works in extension mode (no Metamod required)
  *
  * ========== REQUIREMENTS ==========
- * - KTPAMXX with DODX module (dodx_set_grenade_ammo native)
+ * - KTPAMXX 2.6.6+ with DODX module (grenade ammo natives)
  *
  * ========== CONFIG FILE ==========
  * Location: addons/ktpamx/configs/grenade_loadout.ini
@@ -37,6 +37,11 @@
  *
  * ========== CHANGELOG ==========
  *
+ * v1.0.2 (2026-01-23) - HUD Sync Fix
+ *   * FIXED: Client HUD now correctly shows modified grenade count
+ *   * ADDED: Uses new dodx_send_ammox native for HUD updates
+ *   * ADDED: Version echo to player on connect
+ *
  * v1.0.1 (2026-01-23) - Config Parsing Fix
  *   * FIXED: INI parser incorrectly included '=' in class name
  *
@@ -52,8 +57,12 @@
 #include <dodx>
 #include <dodconst>
 
+// Ammo slots for grenades (from DODX weaponData)
+#define AMMOSLOT_HANDGRENADE 9
+#define AMMOSLOT_STICKGRENADE 11
+
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.1"
+#define PLUGIN_VERSION "1.0.2"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Grenade weapon IDs from dodconst.inc
@@ -66,7 +75,7 @@
 
 // Delay after spawn before setting grenades (seconds)
 // This ensures the default loadout has been applied first
-#define SPAWN_DELAY 0.2
+#define SPAWN_DELAY 0.5
 
 // Class name mappings for INI parsing
 // Index corresponds to DODC_* constants from dodconst.inc
@@ -144,18 +153,24 @@ public dod_client_spawn(id) {
 }
 
 public task_set_grenades(id) {
-    if (!is_user_alive(id))
+    if (!is_user_alive(id)) {
+        log_amx("[KTPGrenadeLoadout] Player %d: not alive, skipping", id);
         return;
+    }
 
     new class = dod_get_user_class(id);
-    if (class < 1 || class > 25)
+    if (class < 1 || class > 25) {
+        log_amx("[KTPGrenadeLoadout] Player %d: invalid class %d, skipping", id, class);
         return;
+    }
 
     new grenadeCount = g_iGrenadeCount[class];
 
     // -1 means don't modify (use game default)
-    if (grenadeCount < 0)
+    if (grenadeCount < 0) {
+        log_amx("[KTPGrenadeLoadout] Player %d: class %d not configured, skipping", id, class);
         return;
+    }
 
     new team = get_user_team(id);
 
@@ -175,8 +190,21 @@ public task_set_grenades(id) {
         }
     }
 
+    // Get current count before setting
+    new currentCount = dodx_get_grenade_ammo(id, grenadeType);
+
     // Set the grenade count
-    dodx_set_grenade_ammo(id, grenadeType, grenadeCount);
+    new setResult = dodx_set_grenade_ammo(id, grenadeType, grenadeCount);
+
+    // Get new count after setting
+    new newCount = dodx_get_grenade_ammo(id, grenadeType);
+
+    // Send AmmoX message to update client HUD via DODX native
+    new ammoSlot = (grenadeType == DODW_STICKGRENADE) ? AMMOSLOT_STICKGRENADE : AMMOSLOT_HANDGRENADE;
+    dodx_send_ammox(id, ammoSlot, grenadeCount);
+
+    log_amx("[KTPGrenadeLoadout] Player %d: class=%d team=%d grenadeType=%d config=%d before=%d setResult=%d after=%d",
+        id, class, team, grenadeType, grenadeCount, currentCount, setResult, newCount);
 }
 
 load_config() {
@@ -265,5 +293,17 @@ public plugin_natives() {
 }
 
 public client_putinserver(id) {
-    // Nothing needed here - spawn forward handles everything
+    // Skip bots and HLTV
+    if (is_user_bot(id) || is_user_hltv(id))
+        return;
+
+    // Delayed version announcement
+    set_task(5.0, "task_version_display", id);
+}
+
+public task_version_display(id) {
+    if (!is_user_connected(id))
+        return;
+
+    client_print(id, print_chat, "%s version %s by %s", PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
 }
