@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.3] - 2026-01-23
+
+### Fixed
+- **Classes without grenades** - Sniper, MG, and other classes that don't normally spawn with grenades can now receive them
+  - Uses `dodx_give_grenade` native to give weapon slot before setting ammo
+  - Previously these classes would have ammo set but no grenade weapon
+
+---
+
 ## [1.0.2] - 2026-01-23
 
 ### Fixed
@@ -51,6 +60,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-[1.0.2]: https://github.com/afraznein/KTPGrenadeLoadout/releases/tag/v1.0.2
-[1.0.1]: https://github.com/afraznein/KTPGrenadeLoadout/releases/tag/v1.0.1
-[1.0.0]: https://github.com/afraznein/KTPGrenadeLoadout/releases/tag/v1.0.0
+[1.0.3]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.3
+[1.0.2]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.2
+[1.0.1]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.1
+[1.0.0]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.0

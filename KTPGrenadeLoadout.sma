@@ -1,8 +1,8 @@
-/* KTP Grenade Loadout v1.0.2
+/* KTP Grenade Loadout v1.0.3
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.2
+ * VERSION: 1.0.3
  * DATE: 2026-01-23
  *
  * ========== FEATURES ==========
@@ -12,7 +12,7 @@
  * - Works in extension mode (no Metamod required)
  *
  * ========== REQUIREMENTS ==========
- * - KTPAMXX 2.6.6+ with DODX module (grenade ammo natives)
+ * - KTPAMXX 2.6.6+ with DODX module (grenade ammo natives, dodx_give_grenade)
  *
  * ========== CONFIG FILE ==========
  * Location: addons/ktpamx/configs/grenade_loadout.ini
@@ -36,6 +36,10 @@
  *   ...
  *
  * ========== CHANGELOG ==========
+ *
+ * v1.0.3 (2026-01-23) - Classes Without Grenades Fix
+ *   * FIXED: Classes that don't normally have grenades (sniper, MG, etc.) now receive them
+ *   * ADDED: Uses dodx_give_grenade to give weapon slot before setting ammo
  *
  * v1.0.2 (2026-01-23) - HUD Sync Fix
  *   * FIXED: Client HUD now correctly shows modified grenade count
@@ -62,7 +66,7 @@
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.2"
+#define PLUGIN_VERSION "1.0.3"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Grenade weapon IDs from dodconst.inc
@@ -192,6 +196,12 @@ public task_set_grenades(id) {
 
     // Get current count before setting
     new currentCount = dodx_get_grenade_ammo(id, grenadeType);
+
+    // If player has no grenades but we want to give them some, we need to
+    // give the weapon first (classes like sniper don't have grenade slot by default)
+    if (currentCount == 0 && grenadeCount > 0) {
+        dodx_give_grenade(id, grenadeType);
+    }
 
     // Set the grenade count
     new setResult = dodx_set_grenade_ammo(id, grenadeType, grenadeCount);

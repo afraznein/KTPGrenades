@@ -1,41 +1,73 @@
-# KTPGrenadeLoadout - Claude Code Context
+# KTPGrenades - Claude Code Context
 
-## Compile Command
-To compile this plugin, use:
+Combined grenade-related plugins for KTP Day of Defeat servers.
+
+## Plugins in This Repository
+
+| Plugin | Source | Description |
+|--------|--------|-------------|
+| **KTPGrenadeLoadout** | `KTPGrenadeLoadout.sma` | Per-class grenade loadout configuration via INI |
+| **KTPGrenadeDamage** | `KTPGrenadeDamage.sma` | Grenade damage reduction by configurable percentage |
+
+---
+
+## Compile Commands
+
+### Compile Loadout Plugin
 ```bash
-wsl bash -c "cd '/mnt/n/Nein_/KTP Git Projects/KTPGrenadeLoadout' && bash compile.sh"
+wsl bash -c "cd '/mnt/n/Nein_/KTP Git Projects/KTPGrenades' && bash compile_loadout.sh"
 ```
 
-This will:
-1. Compile `KTPGrenadeLoadout.sma` using KTPAMXX compiler
-2. Output to `compiled/KTPGrenadeLoadout.amxx`
+### Compile Damage Plugin
+```bash
+wsl bash -c "cd '/mnt/n/Nein_/KTP Git Projects/KTPGrenades' && bash compile_damage.sh"
+```
+
+Both scripts:
+1. Compile using KTPAMXX compiler
+2. Output to `compiled/` directory
 3. Auto-stage to `N:\Nein_\KTP Git Projects\KTP DoD Server\serverfiles\dod\addons\ktpamx\plugins\`
 
-## Project Structure
-- `KTPGrenadeLoadout.sma` - Main plugin source
-- `compile.sh` - WSL compile script
-- `compiled/` - Compiled .amxx output
-- `data/grenade_loadout.ini` - Sample config file
+---
 
-## Config File
+## Project Structure
+
+```
+KTPGrenades/
+  KTPGrenadeLoadout.sma      # Loadout plugin source
+  KTPGrenadeDamage.sma       # Damage plugin source
+  compile_loadout.sh         # Loadout compile script
+  compile_damage.sh          # Damage compile script
+  compiled/                  # Compiled .amxx output
+  data/
+    grenade_loadout.ini      # Sample loadout config
+  CHANGELOG_Loadout.md       # Loadout version history
+  CHANGELOG_Damage.md        # Damage version history
+```
+
+---
+
+## KTPGrenadeLoadout
+
+### Config File
 Deploy `data/grenade_loadout.ini` to: `addons/ktpamx/configs/grenade_loadout.ini`
 
-### Config Format
 ```ini
 [allies]
 garand = 2      ; Class name = grenade count
 carbine = 2
 thompson = 1
+sniper = 1      ; Classes without default grenades also supported
 ...
 
 [axis]
 kar = 2
-k43 = 2
+scharfschutze = 1
 ...
 
 [british]
 enfield = 2
-sten = 1
+marksman = 1
 ...
 ```
 
@@ -43,17 +75,46 @@ sten = 1
 - Maximum count: 10
 - Class names are case-insensitive
 
-## Dependencies
-- **KTPAMXX** with DODX module containing `dodx_set_grenade_ammo` native
-- Requires KTPAMXX build from 2026-01-22 or later
+### Cvars
+| Cvar | Default | Description |
+|------|---------|-------------|
+| `ktp_grenade_loadout` | 1 | Enable/disable plugin |
 
-## Key Features
-- INI-based per-class grenade configuration
-- Applies grenades on spawn with delay (ensures default loadout is applied first)
-- Works in extension mode (no Metamod required)
-- Can be disabled via `ktp_grenade_loadout 0` cvar
+### Dependencies
+- KTPAMXX 2.6.6+ with DODX module (`dodx_set_grenade_ammo`, `dodx_give_grenade`, `dodx_send_ammox`)
 
-## Class Name Reference
+---
+
+## KTPGrenadeDamage
+
+### Cvars
+| Cvar | Default | Description |
+|------|---------|-------------|
+| `ktp_grenade_dmg` | 1 | Enable/disable damage reduction |
+| `ktp_grenade_dmg_reduce` | 50 | Reduction percentage (0-100) |
+
+### How It Works
+1. DODX fires `dod_damage_pre` forward before finalizing damage
+2. Plugin checks if weapon ID is a grenade type
+3. Returns modified damage value (original * (100 - reduction) / 100)
+4. DODX heals player by the difference, effectively reducing damage
+
+### Grenade Weapon IDs
+| Constant | Value | Description |
+|----------|-------|-------------|
+| DODW_HANDGRENADE | 13 | US/Allied hand grenade |
+| DODW_STICKGRENADE | 14 | German stick grenade |
+| DODW_STICKGRENADE_EX | 15 | German stick grenade (variant) |
+| DODW_HANDGRENADE_EX | 16 | Allied hand grenade (variant) |
+| DODW_MILLS_BOMB | 36 | British Mills bomb |
+
+### Dependencies
+- KTPAMXX DODX module with `dod_damage_pre` forward
+
+---
+
+## Class Name Reference (Loadout)
+
 | Section | Class Name | DODC Constant | Description |
 |---------|------------|---------------|-------------|
 | allies | garand | DODC_GARAND | Rifleman |
@@ -79,3 +140,17 @@ sten = 1
 | british | marksman | DODC_MARKSMAN | Marksman |
 | british | bren | DODC_BREN | Gunner |
 | british | piat | DODC_PIAT | Piat |
+
+---
+
+## Version Bump Checklist
+
+### KTPGrenadeLoadout
+1. `KTPGrenadeLoadout.sma` - Update version header and `PLUGIN_VERSION`
+2. `CHANGELOG_Loadout.md` - Add new version entry
+3. `README.md` - Update version in Loadout section
+
+### KTPGrenadeDamage
+1. `KTPGrenadeDamage.sma` - Update `#define PLUGIN_VERSION`
+2. `CHANGELOG_Damage.md` - Add new version entry
+3. `README.md` - Update version in Damage section

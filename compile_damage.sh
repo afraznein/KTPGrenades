@@ -1,11 +1,11 @@
 #!/bin/bash
-# KTPGrenadeLoadout Plugin Compiler - WSL/Linux version
+# KTPGrenades - Damage Plugin Compiler - WSL/Linux version
 
 set -e  # Exit on error
 
-echo "========================================"
-echo "KTPGrenadeLoadout Plugin Compiler (WSL)"
-echo "========================================"
+echo "=========================================="
+echo "KTPGrenades - Damage Compiler (WSL)"
+echo "=========================================="
 echo
 
 # ============================================
@@ -16,13 +16,8 @@ KTPAMXX_DIR="/mnt/n/Nein_/KTP Git Projects/KTPAMXX"
 KTPAMXX_BUILD="$KTPAMXX_DIR/obj-linux/packages/base/addons/ktpamx/scripting"
 KTPAMXX_INCLUDES="$KTPAMXX_DIR/plugins/include"
 
-# Handle both direct execution and piped execution
-if [ -n "${BASH_SOURCE[0]}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-else
-    SCRIPT_DIR="/mnt/n/Nein_/KTP Git Projects/KTPGrenadeLoadout"
-fi
-PLUGIN_NAME="KTPGrenadeLoadout"
+SCRIPT_DIR="/mnt/n/Nein_/KTP Git Projects/KTPGrenades"
+PLUGIN_NAME="KTPGrenadeDamage"
 OUTPUT_DIR="$SCRIPT_DIR/compiled"
 STAGE_DIR="/mnt/n/Nein_/KTP Git Projects/KTP DoD Server/serverfiles/dod/addons/ktpamx/plugins"
 
@@ -35,13 +30,6 @@ TEMP_BUILD="/tmp/ktpbuild_grenade"
 if [ ! -f "$KTPAMXX_BUILD/amxxpc" ]; then
     echo "[ERROR] KTPAMXX Linux compiler not found!"
     echo "        Expected: $KTPAMXX_BUILD/amxxpc"
-    echo "        Please build KTPAMXX first: cd KTPAMXX && ./build_linux.sh"
-    exit 1
-fi
-
-if [ ! -f "$KTPAMXX_INCLUDES/amxmodx.inc" ]; then
-    echo "[ERROR] KTPAMXX includes not found!"
-    echo "        Expected: $KTPAMXX_INCLUDES"
     exit 1
 fi
 
@@ -62,6 +50,7 @@ echo "       Includes: $KTPAMXX_INCLUDES"
 echo
 
 # Create temp build directory
+rm -rf "$TEMP_BUILD"
 mkdir -p "$TEMP_BUILD"
 
 # Copy compiler and libraries
@@ -101,7 +90,6 @@ echo
 echo "[INFO] Staging to server..."
 if [ ! -d "$STAGE_DIR" ]; then
     echo "[WARN] Stage directory does not exist: $STAGE_DIR"
-    echo "       Skipping staging."
 else
     cp "$OUTPUT_DIR/$PLUGIN_NAME.amxx" "$STAGE_DIR/$PLUGIN_NAME.amxx"
     echo "[OK] Staged: $STAGE_DIR/$PLUGIN_NAME.amxx"
