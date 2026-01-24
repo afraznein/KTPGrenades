@@ -113,6 +113,7 @@ Reduces grenade damage by a configurable percentage.
 2. Plugin checks if weapon is a grenade type
 3. Returns modified damage: `original * (100 - reduction) / 100`
 4. DODX heals player by the difference, effectively reducing damage taken
+5. Minimum damage is always 1 (never reduces fatal damage to 0)
 
 ### Changelog
 
