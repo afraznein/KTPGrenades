@@ -8,7 +8,7 @@ Grenade-related plugins for Day of Defeat servers running KTPAMXX.
 
 | Plugin | Version | Description |
 |--------|---------|-------------|
-| **KTPGrenadeLoadout** | 1.0.3 | Per-class grenade loadout configuration via INI file |
+| **KTPGrenadeLoadout** | 1.0.4 | Per-class grenade loadout configuration via INI file |
 | **KTPGrenadeDamage** | 1.0.2 | Grenade damage reduction by configurable percentage |
 
 ---

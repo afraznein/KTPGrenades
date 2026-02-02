@@ -143,6 +143,24 @@ marksman = 1
 
 ---
 
+## Server Deployment
+
+Deploy compiled plugins to production servers using Python/Paramiko.
+
+**Server Credentials:**
+| Server | Host | User | Password |
+|--------|------|------|----------|
+| Atlanta | 74.91.112.182 | dodserver | ktp |
+| Dallas | 74.91.114.195 | dodserver | ktp |
+
+**Remote Paths:**
+- `~/dod-{port}/serverfiles/dod/addons/ktpamx/plugins/KTPGrenadeLoadout.amxx`
+- `~/dod-{port}/serverfiles/dod/addons/ktpamx/plugins/KTPGrenadeDamage.amxx`
+
+See `N:\Nein_\KTP Git Projects\CLAUDE.md` for paramiko SSH documentation.
+
+---
+
 ## Version Bump Checklist
 
 ### KTPGrenadeLoadout

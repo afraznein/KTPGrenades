@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.4] - 2026-02-01
+
+### Changed
+- **Code cleanup** - Reduced verbose logging and simplified spawn handler logic
+  - Removed redundant log_amx calls with detailed debug info
+  - Simplified if/else blocks
+  - Consolidated grenade type selection logic
+
+---
+
 ## [1.0.3] - 2026-01-23
 
 ### Fixed
@@ -60,6 +70,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+[1.0.4]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.4
 [1.0.3]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.3
 [1.0.2]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.2
 [1.0.1]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.1

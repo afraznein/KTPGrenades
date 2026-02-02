@@ -1,9 +1,9 @@
-/* KTP Grenade Loadout v1.0.3
+/* KTP Grenade Loadout v1.0.4
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.3
- * DATE: 2026-01-23
+ * VERSION: 1.0.4
+ * DATE: 2026-02-01
  *
  * ========== FEATURES ==========
  * - Configure grenade counts per class via INI file
@@ -37,6 +37,10 @@
  *
  * ========== CHANGELOG ==========
  *
+ * v1.0.4 (2026-02-01) - Code Cleanup
+ *   * CHANGED: Reduced verbose logging
+ *   * CHANGED: Simplified spawn handler logic
+ *
  * v1.0.3 (2026-01-23) - Classes Without Grenades Fix
  *   * FIXED: Classes that don't normally have grenades (sniper, MG, etc.) now receive them
  *   * ADDED: Uses dodx_give_grenade to give weapon slot before setting ammo
@@ -66,7 +70,7 @@
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.3"
+#define PLUGIN_VERSION "1.0.4"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Grenade weapon IDs from dodconst.inc
@@ -76,10 +80,6 @@
 
 // Default grenade count if not specified in config
 #define DEFAULT_GRENADE_COUNT 1
-
-// Delay after spawn before setting grenades (seconds)
-// This ensures the default loadout has been applied first
-#define SPAWN_DELAY 0.5
 
 // Class name mappings for INI parsing
 // Index corresponds to DODC_* constants from dodconst.inc
@@ -115,6 +115,9 @@ new const g_szClassNames[][] = {
 // Grenade counts per class (loaded from INI)
 // -1 means use game default (don't modify)
 new g_iGrenadeCount[26] = { -1, ... };
+
+// Spawn delay before setting grenades (seconds)
+#define SPAWN_DELAY 0.5
 
 // Config file path
 new g_szConfigPath[256];
@@ -152,69 +155,56 @@ public dod_client_spawn(id) {
     if (!is_user_alive(id))
         return;
 
-    // Delay grenade setting to ensure default loadout is applied first
+    // Delay to let game apply default loadout first
     set_task(SPAWN_DELAY, "task_set_grenades", id);
 }
 
 public task_set_grenades(id) {
-    if (!is_user_alive(id)) {
-        log_amx("[KTPGrenadeLoadout] Player %d: not alive, skipping", id);
+    if (!is_user_alive(id))
         return;
-    }
 
     new class = dod_get_user_class(id);
-    if (class < 1 || class > 25) {
-        log_amx("[KTPGrenadeLoadout] Player %d: invalid class %d, skipping", id, class);
+    if (class < 1 || class > 25)
         return;
-    }
 
     new grenadeCount = g_iGrenadeCount[class];
 
     // -1 means don't modify (use game default)
-    if (grenadeCount < 0) {
-        log_amx("[KTPGrenadeLoadout] Player %d: class %d not configured, skipping", id, class);
+    if (grenadeCount < 0)
         return;
-    }
 
     new team = get_user_team(id);
 
     // Determine which grenade type based on team
-    // Team 1 = Allies, Team 2 = Axis
-    // British classes (21-25) are on Allies team but use Mills Bomb
     new grenadeType;
-
     if (team == AXIS) {
         grenadeType = DODW_STICKGRENADE;
+    } else if (class >= 21 && class <= 25) {
+        grenadeType = DODW_MILLS_BOMB;
     } else {
-        // Allies - check if British class
-        if (class >= 21 && class <= 25) {
-            grenadeType = DODW_MILLS_BOMB;
-        } else {
-            grenadeType = DODW_HANDGRENADE;
-        }
+        grenadeType = DODW_HANDGRENADE;
     }
 
     // Get current count before setting
     new currentCount = dodx_get_grenade_ammo(id, grenadeType);
 
-    // If player has no grenades but we want to give them some, we need to
-    // give the weapon first (classes like sniper don't have grenade slot by default)
+    // For classes without default grenades, give weapon first
     if (currentCount == 0 && grenadeCount > 0) {
         dodx_give_grenade(id, grenadeType);
     }
 
     // Set the grenade count
-    new setResult = dodx_set_grenade_ammo(id, grenadeType, grenadeCount);
+    dodx_set_grenade_ammo(id, grenadeType, grenadeCount);
 
     // Get new count after setting
     new newCount = dodx_get_grenade_ammo(id, grenadeType);
 
-    // Send AmmoX message to update client HUD via DODX native
+    // Send AmmoX message to update client HUD
     new ammoSlot = (grenadeType == DODW_STICKGRENADE) ? AMMOSLOT_STICKGRENADE : AMMOSLOT_HANDGRENADE;
     dodx_send_ammox(id, ammoSlot, grenadeCount);
 
-    log_amx("[KTPGrenadeLoadout] Player %d: class=%d team=%d grenadeType=%d config=%d before=%d setResult=%d after=%d",
-        id, class, team, grenadeType, grenadeCount, currentCount, setResult, newCount);
+    log_amx("[KTPGrenadeLoadout] Player %d: class=%d config=%d before=%d after=%d",
+        id, class, grenadeCount, currentCount, newCount);
 }
 
 load_config() {
