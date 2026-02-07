@@ -1,9 +1,9 @@
-/* KTP Grenade Loadout v1.0.4
+/* KTP Grenade Loadout v1.0.5
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.4
- * DATE: 2026-02-01
+ * VERSION: 1.0.5
+ * DATE: 2026-02-05
  *
  * ========== FEATURES ==========
  * - Configure grenade counts per class via INI file
@@ -36,6 +36,12 @@
  *   ...
  *
  * ========== CHANGELOG ==========
+ *
+ * v1.0.5 (2026-02-05) - Performance Optimization
+ *   * FIXED: Removed per-spawn log_amx() call that caused 196ms+ spikes on mass spawns
+ *   * FIXED: Removed redundant dodx_get_grenade_ammo() verification call
+ *   * ADDED: Debug cvar ktp_grenade_loadout_debug for optional verbose logging
+ *   * CHANGED: Batched spawn processing - single task handles all pending spawns
  *
  * v1.0.4 (2026-02-01) - Code Cleanup
  *   * CHANGED: Reduced verbose logging
@@ -70,7 +76,7 @@
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.4"
+#define PLUGIN_VERSION "1.0.5"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Grenade weapon IDs from dodconst.inc
@@ -124,12 +130,21 @@ new g_szConfigPath[256];
 
 // Cvar for enable/disable
 new g_pcvarEnabled;
+new g_pcvarDebug;
+
+// Batched spawn processing - queue of players needing grenade setup
+new g_iPendingSpawns[33];  // Player IDs waiting for grenade setup
+new g_iPendingCount = 0;   // Number of players in queue
+new bool:g_bTaskScheduled = false;  // Is batch task already scheduled?
 
 public plugin_init() {
     register_plugin(PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
 
     // Cvar to enable/disable the plugin
     g_pcvarEnabled = register_cvar("ktp_grenade_loadout", "1");
+
+    // Debug cvar - enables verbose per-spawn logging (WARNING: causes disk I/O)
+    g_pcvarDebug = register_cvar("ktp_grenade_loadout_debug", "0");
 
     // Build config path
     get_configsdir(g_szConfigPath, charsmax(g_szConfigPath));
@@ -148,6 +163,7 @@ public plugin_cfg() {
 }
 
 // Forward: Player spawn (from DODX)
+// Uses batched processing to avoid 12 separate tasks on round start
 public dod_client_spawn(id) {
     if (!get_pcvar_num(g_pcvarEnabled))
         return;
@@ -155,23 +171,61 @@ public dod_client_spawn(id) {
     if (!is_user_alive(id))
         return;
 
-    // Delay to let game apply default loadout first
-    set_task(SPAWN_DELAY, "task_set_grenades", id);
+    // Add to pending queue (avoid duplicates)
+    for (new i = 0; i < g_iPendingCount; i++) {
+        if (g_iPendingSpawns[i] == id)
+            return;  // Already queued
+    }
+
+    if (g_iPendingCount < sizeof(g_iPendingSpawns)) {
+        g_iPendingSpawns[g_iPendingCount++] = id;
+    }
+
+    // Schedule batch task if not already scheduled
+    if (!g_bTaskScheduled) {
+        g_bTaskScheduled = true;
+        set_task(SPAWN_DELAY, "task_process_spawns");
+    }
 }
 
-public task_set_grenades(id) {
+// Batched spawn processing - handles all queued players in one task
+public task_process_spawns() {
+    g_bTaskScheduled = false;
+
+    new processed = 0;
+    new debug = get_pcvar_num(g_pcvarDebug);
+
+    // Process all queued players
+    for (new i = 0; i < g_iPendingCount; i++) {
+        new id = g_iPendingSpawns[i];
+        if (set_player_grenades(id, debug)) {
+            processed++;
+        }
+    }
+
+    // Clear the queue
+    g_iPendingCount = 0;
+
+    // Only log summary if debug enabled or something was processed
+    if (debug && processed > 0) {
+        log_amx("[KTPGrenadeLoadout] Batch processed %d players", processed);
+    }
+}
+
+// Set grenades for a single player - returns true if modified
+set_player_grenades(id, debug) {
     if (!is_user_alive(id))
-        return;
+        return false;
 
     new class = dod_get_user_class(id);
     if (class < 1 || class > 25)
-        return;
+        return false;
 
     new grenadeCount = g_iGrenadeCount[class];
 
     // -1 means don't modify (use game default)
     if (grenadeCount < 0)
-        return;
+        return false;
 
     new team = get_user_team(id);
 
@@ -185,7 +239,7 @@ public task_set_grenades(id) {
         grenadeType = DODW_HANDGRENADE;
     }
 
-    // Get current count before setting
+    // Get current count to check if we need to give weapon
     new currentCount = dodx_get_grenade_ammo(id, grenadeType);
 
     // For classes without default grenades, give weapon first
@@ -196,15 +250,17 @@ public task_set_grenades(id) {
     // Set the grenade count
     dodx_set_grenade_ammo(id, grenadeType, grenadeCount);
 
-    // Get new count after setting
-    new newCount = dodx_get_grenade_ammo(id, grenadeType);
-
     // Send AmmoX message to update client HUD
     new ammoSlot = (grenadeType == DODW_STICKGRENADE) ? AMMOSLOT_STICKGRENADE : AMMOSLOT_HANDGRENADE;
     dodx_send_ammox(id, ammoSlot, grenadeCount);
 
-    log_amx("[KTPGrenadeLoadout] Player %d: class=%d config=%d before=%d after=%d",
-        id, class, grenadeCount, currentCount, newCount);
+    // Debug logging (expensive - only when explicitly enabled)
+    if (debug) {
+        log_amx("[KTPGrenadeLoadout] Player %d: class=%d config=%d before=%d",
+            id, class, grenadeCount, currentCount);
+    }
+
+    return true;
 }
 
 load_config() {
@@ -285,11 +341,6 @@ find_class_by_name(const name[]) {
         }
     }
     return 0;
-}
-
-// Admin command to reload config
-public plugin_natives() {
-    // No custom natives needed
 }
 
 public client_putinserver(id) {

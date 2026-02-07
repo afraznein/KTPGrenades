@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.5] - 2026-02-05
+
+### Fixed
+- **Performance: 196ms+ spike on mass spawns** - Observed during 12-man match round starts
+  - Root cause: `log_amx()` called for every player spawn = 12 synchronous disk writes
+  - Solution: Removed per-spawn logging, added optional debug cvar
+
+### Changed
+- **Batched spawn processing** - All spawns in a frame are now processed in a single task
+  - Before: 12 separate `set_task()` calls on round start
+  - After: 1 task processes all queued players
+- **Removed redundant native call** - Eliminated verification `dodx_get_grenade_ammo()` after setting
+
+### Added
+- **Debug cvar** - `ktp_grenade_loadout_debug` (default: 0)
+  - Set to 1 for verbose per-spawn logging (not recommended in production)
+  - Logs individual player grenade assignments when enabled
+
+---
+
 ## [1.0.4] - 2026-02-01
 
 ### Changed
@@ -70,6 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+[1.0.5]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.5
 [1.0.4]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.4
 [1.0.3]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.3
 [1.0.2]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.2
