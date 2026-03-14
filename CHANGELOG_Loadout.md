@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.6] - 2026-03-13
+
+### Fixed
+- **`g_bTaskScheduled` not reset on map change** — If map changed while batch task was in flight, flag stayed `true` permanently, blocking all future spawn grenade processing.
+- **Section parser copied trailing `]`** — INI section names included the closing bracket character.
+- **`set_task` used raw player ID as task ID** — Version display and batch tasks now use dedicated `TASK_VERSION_BASE` and `TASK_BATCH_SPAWN` constants.
+- **INI key copy not clamped to buffer size** — `copy(key, eq, line)` used the raw `=` position as max length without clamping to `charsmax(key)`. A config key longer than 31 chars would overflow the `key[32]` buffer.
+
+### Changed
+- Version announcement restricted to connected players with proper task cleanup.
+
+### Added
+- `plugin_end()` to reset batch state on map change.
+- `client_disconnected` cleanup for version display task.
+
+---
+
 ## [1.0.5] - 2026-02-05
 
 ### Fixed
@@ -90,6 +107,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+[1.0.6]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.6
 [1.0.5]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.5
 [1.0.4]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.4
 [1.0.3]: https://github.com/afraznein/KTPGrenades/releases/tag/loadout-v1.0.3

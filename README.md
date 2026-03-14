@@ -8,8 +8,8 @@ Grenade-related plugins for Day of Defeat servers running KTPAMXX.
 
 | Plugin | Version | Description |
 |--------|---------|-------------|
-| **KTPGrenadeLoadout** | 1.0.5 | Per-class grenade loadout configuration via INI file |
-| **KTPGrenadeDamage** | 1.0.2 | Grenade damage reduction by configurable percentage |
+| **KTPGrenadeLoadout** | 1.0.6 | Per-class grenade loadout configuration via INI file |
+| **KTPGrenadeDamage** | 1.0.3 | Grenade damage reduction by configurable percentage |
 
 ---
 
@@ -113,7 +113,7 @@ Reduces grenade damage by a configurable percentage.
 2. Plugin checks if weapon is a grenade type
 3. Returns modified damage: `original * (100 - reduction) / 100`
 4. DODX heals player by the difference, effectively reducing damage taken
-5. Minimum damage is always 1 (never reduces fatal damage to 0)
+5. At 100% reduction, damage is reduced to 0 (friendly fire is not reduced)
 
 ### Changelog
 

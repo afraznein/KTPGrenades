@@ -12,7 +12,7 @@
 #include <dodconst>
 
 #define PLUGIN_NAME    "KTP Grenade Damage"
-#define PLUGIN_VERSION "1.0.2"
+#define PLUGIN_VERSION "1.0.3"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Cvar pointers
@@ -47,28 +47,27 @@ public dod_damage_pre(attacker, victim, damage, wpnindex, hitplace, TA)
 	if (!get_pcvar_num(g_pCvarEnabled))
 		return damage;
 
+	// Don't reduce team damage (friendly fire)
+	if (TA)
+		return damage;
+
 	// Check if this is grenade damage
 	if (!is_grenade_weapon(wpnindex))
 		return damage;
 
-	// Get reduction percentage
+	// Get reduction percentage (read live so RCON changes take effect immediately)
 	new Float:reduction = get_pcvar_float(g_pCvarReduction);
+	if (reduction < 0.0) reduction = 0.0;
+	else if (reduction > 100.0) reduction = 100.0;
 
-	// Clamp to 0-100 range
-	if (reduction < 0.0)
-		reduction = 0.0;
-	else if (reduction > 100.0)
-		reduction = 100.0;
-
-	// Calculate reduced damage
 	// reduction = 50 means keep 50% of damage (reduce by 50%)
 	new Float:multiplier = (100.0 - reduction) / 100.0;
 	new Float:newDamage = float(damage) * multiplier;
 
-	// Round to nearest integer, minimum 1 if any damage was done
+	// Round to nearest integer (0 is valid at 100% reduction)
 	new reducedDamage = floatround(newDamage, floatround_round);
-	if (reducedDamage < 1 && damage > 0)
-		reducedDamage = 1;
+	if (reducedDamage < 0)
+		reducedDamage = 0;
 
 	return reducedDamage;
 }
@@ -76,7 +75,7 @@ public dod_damage_pre(attacker, victim, damage, wpnindex, hitplace, TA)
 /**
  * Check if weapon ID is a grenade type.
  */
-bool:is_grenade_weapon(wpnindex)
+stock bool:is_grenade_weapon(wpnindex)
 {
 	switch (wpnindex)
 	{

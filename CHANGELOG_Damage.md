@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.3] - 2026-03-13
+
+### Fixed
+- **TK damage also reduced** — Friendly fire grenade damage was incorrectly reduced. Now skips reduction when `TA` flag is set.
+- **Minimum-1 floor at 100% reduction** — Setting reduction to 100% still dealt 1 damage. Now correctly allows 0 damage.
+
+### Changed
+- **Added `stock` tag** to `is_grenade_weapon` helper function.
+
+---
+
 ## [1.0.2] - 2026-01-23
 
 ### Changed
@@ -45,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+[1.0.3]: https://github.com/afraznein/KTPGrenades/releases/tag/damage-v1.0.3
 [1.0.2]: https://github.com/afraznein/KTPGrenades/releases/tag/damage-v1.0.2
 [1.0.1]: https://github.com/afraznein/KTPGrenades/releases/tag/damage-v1.0.1
 [1.0.0]: https://github.com/afraznein/KTPGrenades/releases/tag/damage-v1.0.0

@@ -1,9 +1,9 @@
-/* KTP Grenade Loadout v1.0.5
+/* KTP Grenade Loadout v1.0.6
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.5
- * DATE: 2026-02-05
+ * VERSION: 1.0.6
+ * DATE: 2026-03-13
  *
  * ========== FEATURES ==========
  * - Configure grenade counts per class via INI file
@@ -36,6 +36,15 @@
  *   ...
  *
  * ========== CHANGELOG ==========
+ *
+ * v1.0.6 (2026-03-13) - Bug Fixes + Safety
+ *   * FIXED: g_bTaskScheduled not reset on map change (permanent deadlock after map change during task)
+ *   * FIXED: Section parser copied trailing ']' into section name
+ *   * FIXED: set_task used raw player ID as task ID (collision risk)
+ *   * FIXED: INI key copy not clamped to buffer size (overflow with key > 31 chars)
+ *   * CHANGED: Version announcement restricted to admins only
+ *   + ADDED: client_disconnected cleanup for version task
+ *   + ADDED: plugin_end() to flush pending queue on map change
  *
  * v1.0.5 (2026-02-05) - Performance Optimization
  *   * FIXED: Removed per-spawn log_amx() call that caused 196ms+ spikes on mass spawns
@@ -71,13 +80,17 @@
 #include <dodx>
 #include <dodconst>
 
-// Ammo slots for grenades (from DODX weaponData)
+// Ammo slots for grenades (from DODX weaponData in NBase.cpp)
 #define AMMOSLOT_HANDGRENADE 9
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.5"
+#define PLUGIN_VERSION "1.0.6"
 #define PLUGIN_AUTHOR  "Nein_"
+
+// Task IDs (KTPGrenadeLoadout owns 7000-7034)
+#define TASK_VERSION_BASE    7000  // + player id (range 7001-7032)
+#define TASK_BATCH_SPAWN     7033
 
 // Grenade weapon IDs from dodconst.inc
 #define DODW_HANDGRENADE  13
@@ -136,6 +149,7 @@ new g_pcvarDebug;
 new g_iPendingSpawns[33];  // Player IDs waiting for grenade setup
 new g_iPendingCount = 0;   // Number of players in queue
 new bool:g_bTaskScheduled = false;  // Is batch task already scheduled?
+new bool:g_bDebug = false;  // Cached debug flag
 
 public plugin_init() {
     register_plugin(PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
@@ -162,6 +176,12 @@ public plugin_cfg() {
     load_config();
 }
 
+public plugin_end() {
+    // Reset batch state on map change to prevent g_bTaskScheduled deadlock
+    g_bTaskScheduled = false;
+    g_iPendingCount = 0;
+}
+
 // Forward: Player spawn (from DODX)
 // Uses batched processing to avoid 12 separate tasks on round start
 public dod_client_spawn(id) {
@@ -184,21 +204,21 @@ public dod_client_spawn(id) {
     // Schedule batch task if not already scheduled
     if (!g_bTaskScheduled) {
         g_bTaskScheduled = true;
-        set_task(SPAWN_DELAY, "task_process_spawns");
+        set_task(SPAWN_DELAY, "task_process_spawns", TASK_BATCH_SPAWN);
     }
 }
 
 // Batched spawn processing - handles all queued players in one task
-public task_process_spawns() {
+public task_process_spawns(taskid) {
     g_bTaskScheduled = false;
+    g_bDebug = bool:get_pcvar_num(g_pcvarDebug);
 
     new processed = 0;
-    new debug = get_pcvar_num(g_pcvarDebug);
 
     // Process all queued players
     for (new i = 0; i < g_iPendingCount; i++) {
         new id = g_iPendingSpawns[i];
-        if (set_player_grenades(id, debug)) {
+        if (set_player_grenades(id)) {
             processed++;
         }
     }
@@ -207,13 +227,13 @@ public task_process_spawns() {
     g_iPendingCount = 0;
 
     // Only log summary if debug enabled or something was processed
-    if (debug && processed > 0) {
+    if (g_bDebug && processed > 0) {
         log_amx("[KTPGrenadeLoadout] Batch processed %d players", processed);
     }
 }
 
 // Set grenades for a single player - returns true if modified
-set_player_grenades(id, debug) {
+set_player_grenades(id) {
     if (!is_user_alive(id))
         return false;
 
@@ -255,7 +275,7 @@ set_player_grenades(id, debug) {
     dodx_send_ammox(id, ammoSlot, grenadeCount);
 
     // Debug logging (expensive - only when explicitly enabled)
-    if (debug) {
+    if (g_bDebug) {
         log_amx("[KTPGrenadeLoadout] Player %d: class=%d config=%d before=%d",
             id, class, grenadeCount, currentCount);
     }
@@ -294,10 +314,14 @@ load_config() {
 
         // Check for section header
         if (line[0] == '[') {
-            // Extract section name
+            // Extract section name (between [ and ])
             new end = contain(line, "]");
             if (end > 1) {
-                copy(section, end, line[1]);
+                // end - 1 = length of section name (skip '[', stop before ']')
+                new len = end - 1;
+                if (len > charsmax(section))
+                    len = charsmax(section);
+                copy(section, len, line[1]);
                 strtolower(section);
             }
             continue;
@@ -308,7 +332,7 @@ load_config() {
         if (eq < 1)
             continue;
 
-        copy(key, eq, line);
+        copy(key, min(eq, charsmax(key)), line);
         copy(value, charsmax(value), line[eq + 1]);
         trim(key);
         trim(value);
@@ -321,9 +345,9 @@ load_config() {
             continue;
         }
 
-        // Parse count
+        // Parse count (-1 = use game default, 0-10 = override)
         count = str_to_num(value);
-        if (count < 0) count = 0;
+        if (count < -1) count = -1;
         if (count > 10) count = 10;
 
         g_iGrenadeCount[classId] = count;
@@ -349,11 +373,16 @@ public client_putinserver(id) {
         return;
 
     // Delayed version announcement
-    set_task(5.0, "task_version_display", id);
+    set_task(5.0, "task_version_display", id + TASK_VERSION_BASE);
 }
 
-public task_version_display(id) {
-    if (!is_user_connected(id))
+public client_disconnected(id) {
+    remove_task(id + TASK_VERSION_BASE);
+}
+
+public task_version_display(taskid) {
+    new id = taskid - TASK_VERSION_BASE;
+    if (id < 1 || id > MAX_PLAYERS || !is_user_connected(id))
         return;
 
     client_print(id, print_chat, "%s version %s by %s", PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
