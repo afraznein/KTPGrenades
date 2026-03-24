@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.7] - 2026-03-24
+
+### Changed
+- **Version broadcast removed** — No longer sends plugin info to players on connect. Reduces chat noise and avoids leaking server tech stack.
+- **INI section parsing removed** — Sections (`[allies]`, `[axis]`, `[british]`) were parsed but never enforced — class names are globally unique. Removed dead `section` variable and simplified parser. Sections remain as cosmetic comments in the INI.
+- **`find_class_by_name` skips empty entries** — Unused mortar class slots (indices 9, 20) with empty names could false-match on malformed INI keys. Now skips `""` entries.
+- **Dead code removed** — `TASK_VERSION_BASE`, `task_version_display`, and `client_putinserver`/`client_disconnected` version task management all removed.
+
+---
+
 ## [1.0.6] - 2026-03-13
 
 ### Fixed

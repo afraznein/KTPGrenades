@@ -12,12 +12,15 @@
 #include <dodconst>
 
 #define PLUGIN_NAME    "KTP Grenade Damage"
-#define PLUGIN_VERSION "1.0.3"
+#define PLUGIN_VERSION "1.0.4"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Cvar pointers
 new g_pCvarEnabled;
 new g_pCvarReduction;
+
+// Cached reduction value (avoid cvar read on every damage event)
+new Float:g_fCachedReduction = 50.0;
 
 // Grenade weapon IDs (from dodconst.inc)
 // DODW_HANDGRENADE = 13
@@ -34,7 +37,19 @@ public plugin_init()
 	g_pCvarEnabled = register_cvar("ktp_grenade_dmg", "1");           // 0 = disabled, 1 = enabled
 	g_pCvarReduction = register_cvar("ktp_grenade_dmg_reduce", "50"); // Reduction percentage (0-100)
 
-	server_print("[KTP] %s v%s by %s enabled", PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
+}
+
+public plugin_cfg()
+{
+	// Cache reduction value after cvars are loaded from config
+	cache_reduction();
+}
+
+stock cache_reduction()
+{
+	g_fCachedReduction = get_pcvar_float(g_pCvarReduction);
+	if (g_fCachedReduction < 0.0) g_fCachedReduction = 0.0;
+	else if (g_fCachedReduction > 100.0) g_fCachedReduction = 100.0;
 }
 
 /**
@@ -55,13 +70,9 @@ public dod_damage_pre(attacker, victim, damage, wpnindex, hitplace, TA)
 	if (!is_grenade_weapon(wpnindex))
 		return damage;
 
-	// Get reduction percentage (read live so RCON changes take effect immediately)
-	new Float:reduction = get_pcvar_float(g_pCvarReduction);
-	if (reduction < 0.0) reduction = 0.0;
-	else if (reduction > 100.0) reduction = 100.0;
-
-	// reduction = 50 means keep 50% of damage (reduce by 50%)
-	new Float:multiplier = (100.0 - reduction) / 100.0;
+	// Use cached reduction value (updated at plugin_cfg, avoidscvar read per damage event)
+	// RCON changes require map change to take effect — acceptable for a rarely-changed setting
+	new Float:multiplier = (100.0 - g_fCachedReduction) / 100.0;
 	new Float:newDamage = float(damage) * multiplier;
 
 	// Round to nearest integer (0 is valid at 100% reduction)

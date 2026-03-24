@@ -1,9 +1,9 @@
-/* KTP Grenade Loadout v1.0.6
+/* KTP Grenade Loadout v1.0.7
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.6
- * DATE: 2026-03-13
+ * VERSION: 1.0.7
+ * DATE: 2026-03-24
  *
  * ========== FEATURES ==========
  * - Configure grenade counts per class via INI file
@@ -85,11 +85,10 @@
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.6"
+#define PLUGIN_VERSION "1.0.7"
 #define PLUGIN_AUTHOR  "Nein_"
 
-// Task IDs (KTPGrenadeLoadout owns 7000-7034)
-#define TASK_VERSION_BASE    7000  // + player id (range 7001-7032)
+// Task IDs
 #define TASK_BATCH_SPAWN     7033
 
 // Grenade weapon IDs from dodconst.inc
@@ -302,30 +301,15 @@ load_config() {
     }
 
     new line[128], key[32], value[16];
-    new section[16];
     new classId, count, loaded = 0;
 
     while (fgets(file, line, charsmax(line))) {
         trim(line);
 
-        // Skip empty lines and comments
-        if (line[0] == '^0' || line[0] == ';' || line[0] == '#' || (line[0] == '/' && line[1] == '/'))
+        // Skip empty lines, comments, and section headers
+        // (sections like [allies]/[axis]/[british] are cosmetic — class names are globally unique)
+        if (line[0] == '^0' || line[0] == ';' || line[0] == '#' || (line[0] == '/' && line[1] == '/') || line[0] == '[')
             continue;
-
-        // Check for section header
-        if (line[0] == '[') {
-            // Extract section name (between [ and ])
-            new end = contain(line, "]");
-            if (end > 1) {
-                // end - 1 = length of section name (skip '[', stop before ']')
-                new len = end - 1;
-                if (len > charsmax(section))
-                    len = charsmax(section);
-                copy(section, len, line[1]);
-                strtolower(section);
-            }
-            continue;
-        }
 
         // Parse key=value
         new eq = contain(line, "=");
@@ -360,30 +344,13 @@ load_config() {
 
 find_class_by_name(const name[]) {
     for (new i = 1; i < sizeof(g_szClassNames); i++) {
-        if (equal(name, g_szClassNames[i])) {
+        // Skip empty entries (unused mortar class slots at indices 9, 20)
+        if (g_szClassNames[i][0] == '^0')
+            continue;
+        if (equal(name, g_szClassNames[i]))
             return i;
-        }
     }
     return 0;
 }
 
-public client_putinserver(id) {
-    // Skip bots and HLTV
-    if (is_user_bot(id) || is_user_hltv(id))
-        return;
-
-    // Delayed version announcement
-    set_task(5.0, "task_version_display", id + TASK_VERSION_BASE);
-}
-
-public client_disconnected(id) {
-    remove_task(id + TASK_VERSION_BASE);
-}
-
-public task_version_display(taskid) {
-    new id = taskid - TASK_VERSION_BASE;
-    if (id < 1 || id > MAX_PLAYERS || !is_user_connected(id))
-        return;
-
-    client_print(id, print_chat, "%s version %s by %s", PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
-}
+// Version broadcast removed — no need to leak plugin info to players

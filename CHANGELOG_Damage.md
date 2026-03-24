@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.4] - 2026-03-24
+
+### Changed
+- **Cached reduction cvar** — `get_pcvar_float(g_pCvarReduction)` was called on every grenade damage event in a hot path. Now cached at `plugin_cfg` into `g_fCachedReduction` with clamping. RCON changes require map change (acceptable for a rarely-changed setting).
+- **Removed `server_print` from `plugin_init`** — Fired on every map change. `register_plugin` already records the plugin for `amx plugins` output.
+
+---
+
 ## [1.0.3] - 2026-03-13
 
 ### Fixed
