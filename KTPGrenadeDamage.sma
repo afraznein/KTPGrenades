@@ -10,9 +10,10 @@
 #include <amxmodx>
 #include <dodx>
 #include <dodconst>
+#include <ktp_version_reporter>
 
 #define PLUGIN_NAME    "KTP Grenade Damage"
-#define PLUGIN_VERSION "1.0.4"
+#define PLUGIN_VERSION "1.0.5"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Cvar pointers
@@ -32,6 +33,7 @@ new Float:g_fCachedReduction = 50.0;
 public plugin_init()
 {
 	register_plugin(PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
+	KTP_RegisterVersion(PLUGIN_NAME, PLUGIN_VERSION);
 
 	// Cvars
 	g_pCvarEnabled = register_cvar("ktp_grenade_dmg", "1");           // 0 = disabled, 1 = enabled

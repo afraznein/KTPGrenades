@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.8] - 2026-04-25
+
+### Added
+- **Adopted `ktp_version_reporter` shared include** — plugin now registers with the fleet-wide `amx_ktp_versions` rcon command (ADMIN_RCON). Output reports name, version, build SHA, and build time alongside other KTP plugins. See KTPMatchHandler 0.10.116 for the canary release introducing the include.
+- **`compile_loadout.sh` build-info generation** — git short SHA + UTC build time written to `build_info.inc` and baked into the .amxx so the rcon command can report what's actually deployed.
+
+### Fixed
+- **`compile_loadout.sh` temp-dir nesting bug** — `cp -r src dst` accumulates nested `include/` dirs on re-runs. Added `rm -rf "$TEMP_BUILD"` before `mkdir`. (`compile_damage.sh` already had the fix.) Discovered while wiring `ktp_version_reporter`.
+
+---
+
 ## [1.0.7] - 2026-03-24
 
 ### Changed

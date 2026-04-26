@@ -61,13 +61,33 @@ echo "       Compiler: $KTPAMXX_BUILD/amxxpc"
 echo "       Includes: $KTPAMXX_INCLUDES"
 echo
 
-# Create temp build directory
+# Create temp build directory — wipe first so re-runs don't accumulate
+# nested include/ dirs from `cp -r src dst` semantics.
+rm -rf "$TEMP_BUILD"
 mkdir -p "$TEMP_BUILD"
 
 # Copy compiler and libraries
 cp "$KTPAMXX_BUILD/amxxpc" "$TEMP_BUILD/"
 cp "$KTPAMXX_BUILD/amxxpc32.so" "$TEMP_BUILD/"
 cp -r "$KTPAMXX_INCLUDES" "$TEMP_BUILD/include"
+
+# Generate build_info.inc for ktp_version_reporter — git SHA + build time
+# get baked into the .amxx so `amx_ktp_versions` rcon can report what's
+# actually deployed. Falls back to "unknown" off-toolchain.
+GIT_SHA=$(git -C "$SCRIPT_DIR" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+GIT_DIRTY=""
+if [ "$GIT_SHA" != "unknown" ]; then
+    if ! git -C "$SCRIPT_DIR" diff --quiet 2>/dev/null || \
+       ! git -C "$SCRIPT_DIR" diff --cached --quiet 2>/dev/null; then
+        GIT_DIRTY="-dirty"
+    fi
+fi
+BUILD_TIME=$(date -u +%Y-%m-%dT%H:%MZ)
+cat > "$TEMP_BUILD/include/build_info.inc" <<EOF
+#define KTP_BUILD_SHA "${GIT_SHA}${GIT_DIRTY}"
+#define KTP_BUILD_TIME "$BUILD_TIME"
+EOF
+echo "[INFO] build_info: SHA=${GIT_SHA}${GIT_DIRTY} BUILD_TIME=$BUILD_TIME"
 
 # Convert line endings and copy source
 sed 's/\r$//' "$SCRIPT_DIR/$PLUGIN_NAME.sma" > "$TEMP_BUILD/$PLUGIN_NAME.sma"

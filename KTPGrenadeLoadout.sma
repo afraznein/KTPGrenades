@@ -79,13 +79,14 @@
 #include <amxmisc>
 #include <dodx>
 #include <dodconst>
+#include <ktp_version_reporter>
 
 // Ammo slots for grenades (from DODX weaponData in NBase.cpp)
 #define AMMOSLOT_HANDGRENADE 9
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.7"
+#define PLUGIN_VERSION "1.0.8"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Task IDs
@@ -152,6 +153,7 @@ new bool:g_bDebug = false;  // Cached debug flag
 
 public plugin_init() {
     register_plugin(PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
+    KTP_RegisterVersion(PLUGIN_NAME, PLUGIN_VERSION);
 
     // Cvar to enable/disable the plugin
     g_pcvarEnabled = register_cvar("ktp_grenade_loadout", "1");
