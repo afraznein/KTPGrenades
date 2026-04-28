@@ -1,0 +1,43 @@
+# KTP Tier 1 — Build-time smoke for KTPGrenades
+#
+# This repo ships TWO plugins from one source tree:
+#   - KTPGrenadeLoadout (per-class grenade slot configuration)
+#   - KTPGrenadeDamage  (grenade damage reduction, e.g. anti-frag stacking)
+#
+# Matrix runs both in parallel — each calls the reusable smoke workflow
+# independently with its own assertion. fail-fast: false ensures one
+# plugin's red doesn't cancel the other's run.
+#
+# Implementation in KTPInfrastructure/.github/workflows/smoke-callable.yml.
+
+name: Tier 1 Smoke
+
+on:
+  push:
+    branches: ['**']
+    paths-ignore: ['**.md', 'docs/**']
+  pull_request:
+    paths-ignore: ['**.md', 'docs/**']
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin:
+          - source: KTPGrenadeLoadout.sma
+            artifact: KTPGrenadeLoadout.amxx
+            name: KTPGrenadeLoadout
+          - source: KTPGrenadeDamage.sma
+            artifact: KTPGrenadeDamage.amxx
+            name: KTPGrenadeDamage
+    uses: ${{ github.repository_owner }}/KTPInfrastructure/.github/workflows/smoke-callable.yml@main
+    with:
+      under_test_label: KTPGrenades / ${{ matrix.plugin.name }}
+      under_test_kind: amx_plugin
+      amxx_source: ${{ matrix.plugin.source }}
+      artifact_container_path: /opt/hlds/dod/addons/ktpamx/plugins/${{ matrix.plugin.artifact }}
+      assert_plugin: ${{ matrix.plugin.name }}
+    secrets:
+      ktp_checkout_token: ${{ secrets.KTP_CHECKOUT_TOKEN }}
