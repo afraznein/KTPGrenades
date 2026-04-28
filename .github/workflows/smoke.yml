@@ -32,7 +32,7 @@ jobs:
           - source: KTPGrenadeDamage.sma
             artifact: KTPGrenadeDamage.amxx
             name: KTPGrenadeDamage
-    uses: ${{ github.repository_owner }}/KTPInfrastructure/.github/workflows/smoke-callable.yml@main
+    uses: afraznein/KTPInfrastructure/.github/workflows/smoke-callable.yml@main
     with:
       under_test_label: KTPGrenades / ${{ matrix.plugin.name }}
       under_test_kind: amx_plugin
