@@ -1,0 +1,45 @@
+# KTP Tier 1 — config-parse tests (per-plugin)
+#
+# Validates the schema of `data/grenade_loadout.ini`. Catches typos in
+# section names (only allies/axis/british are recognized — anything else
+# is silently ignored), out-of-range counts, and duplicate keys (which
+# configparser silently last-wins on).
+
+name: config tests
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'data/*.ini'
+      - 'tests/config_parse/**'
+      - '.github/workflows/config-tests.yml'
+  pull_request:
+    paths:
+      - 'data/*.ini'
+      - 'tests/config_parse/**'
+      - '.github/workflows/config-tests.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  config-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pytest
+        run: pip install --quiet pytest
+
+      - name: Run config-parse tests
+        run: pytest tests/config_parse/ -v
