@@ -8,8 +8,8 @@ Grenade-related plugins for Day of Defeat servers running KTPAMXX.
 
 | Plugin | Version | Description |
 |--------|---------|-------------|
-| **KTPGrenadeLoadout** | 1.0.7 | Per-class grenade loadout configuration via INI file |
-| **KTPGrenadeDamage** | 1.0.4 | Grenade damage reduction by configurable percentage |
+| **KTPGrenadeLoadout** | 1.0.9 | Per-class grenade loadout configuration via INI file |
+| **KTPGrenadeDamage** | 1.0.5 | Grenade damage reduction by configurable percentage |
 
 ---
 
@@ -73,6 +73,8 @@ bren = 1
 piat = 0
 ```
 
+Values must be integers (`-1` to `10`; inline `;`/`#`/`//` comments allowed). Non-numeric values are rejected with a log line and the class keeps the game default — they no longer silently parse to 0 and strip grenades.
+
 ### CVARs
 
 | CVAR | Default | Description |
@@ -114,6 +116,8 @@ Reduces grenade damage by a configurable percentage.
 3. Returns modified damage: `original * (100 - reduction) / 100`
 4. DODX heals player by the difference, effectively reducing damage taken
 5. At 100% reduction, damage is reduced to 0 (friendly fire is not reduced)
+
+**Platform contract:** `dod_damage_pre` is an ET_CONTINUE forward — DODX applies the *highest* return value across plugins. If a second damage-modifier plugin ever ships, the least reduction silently wins. The single-modifier assumption is load-bearing.
 
 ### Changelog
 

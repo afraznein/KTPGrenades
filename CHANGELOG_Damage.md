@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.5 docs note] - 2026-07-08
+
+- **Platform contract documented (no code change, stays 1.0.5):** `dod_damage_pre` is an ET_CONTINUE forward — DODX applies the highest return value across plugins, so if a second damage-modifier plugin ever ships, the least reduction silently wins. The single-modifier assumption is load-bearing. Noted in the source header and README.
+
+---
+
 ## [1.0.5] - 2026-04-25
 
 ### Added

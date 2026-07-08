@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.9] - 2026-07-08
+
+### Fixed
+- **`dodx_give_grenade` return now checked** — the native returns 0 (entity create/spawn failed or player died) or -1 (pickup refused, entity removed — treat as "entity not granted"), and both were silently ignored before the ammo write. Failures now log a line with player/class/grenade-type. Success-path behavior unchanged; the ammo write still runs so a partial failure stays visible instead of compounding.
+- **Non-numeric config values no longer strip grenades** — `str_to_num("abc")` returns 0, so a typo'd value silently zeroed the class's grenade count. Values are now validated as integers before parsing (inline `;`/`#`/`//` comments still allowed); invalid entries are rejected with a log naming the key and value, and the class keeps the game default.
+
+---
+
 ## [1.0.8] - 2026-04-25
 
 ### Added

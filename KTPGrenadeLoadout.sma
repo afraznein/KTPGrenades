@@ -1,9 +1,9 @@
-/* KTP Grenade Loadout v1.0.7
+/* KTP Grenade Loadout v1.0.9
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.7
- * DATE: 2026-03-24
+ * VERSION: 1.0.9
+ * DATE: 2026-07-08
  *
  * ========== FEATURES ==========
  * - Configure grenade counts per class via INI file
@@ -36,6 +36,22 @@
  *   ...
  *
  * ========== CHANGELOG ==========
+ *
+ * v1.0.9 (2026-07-08) - Config Validation + Native Failure Logging
+ *   * FIXED: dodx_give_grenade return was ignored — 0 (entity/spawn failure)
+ *            and -1 (pickup refused, entity removed) now log a failure line
+ *   * FIXED: Non-numeric INI value parsed to 0 = silent grenade strip;
+ *            values are now validated, bad entries rejected with a log
+ *
+ * v1.0.8 (2026-04-25) - Version Reporting
+ *   + ADDED: ktp_version_reporter include (amx_ktp_versions rcon reporting)
+ *   + ADDED: compile_loadout.sh bakes git SHA + build time into the .amxx
+ *   * FIXED: compile_loadout.sh temp-dir nesting on re-runs
+ *
+ * v1.0.7 (2026-03-24) - Cleanup
+ *   * CHANGED: Version broadcast to players removed (chat noise / info leak)
+ *   * CHANGED: Dead INI section parsing removed (class names are globally unique)
+ *   * CHANGED: find_class_by_name skips empty entries (unused mortar slots)
  *
  * v1.0.6 (2026-03-13) - Bug Fixes + Safety
  *   * FIXED: g_bTaskScheduled not reset on map change (permanent deadlock after map change during task)
@@ -86,7 +102,7 @@
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.8"
+#define PLUGIN_VERSION "1.0.9"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Task IDs
@@ -265,7 +281,14 @@ set_player_grenades(id) {
 
     // For classes without default grenades, give weapon first
     if (currentCount == 0 && grenadeCount > 0) {
-        dodx_give_grenade(id, grenadeType);
+        // 0 = entity create/spawn failed or player died; -1 = pickup refused,
+        // entity removed. Either way the ammo write below may land on a player
+        // with no grenade weapon slot — log it, don't fail silently.
+        new giveResult = dodx_give_grenade(id, grenadeType);
+        if (giveResult != 1) {
+            log_amx("[KTPGrenadeLoadout] dodx_give_grenade failed (ret=%d) player=%d class=%d type=%d",
+                giveResult, id, class, grenadeType);
+        }
     }
 
     // Set the grenade count
@@ -331,6 +354,17 @@ load_config() {
             continue;
         }
 
+        // Strip inline comment from the value ("garand = 1  ; Rifleman")
+        strip_inline_comment(value);
+        trim(value);
+
+        // Validate before str_to_num — a non-numeric value parses to 0,
+        // silently stripping the class's grenades. Keep the default instead.
+        if (!is_valid_count(value)) {
+            log_amx("[KTPGrenadeLoadout] Invalid count '%s' for class '%s' in config — entry ignored", value, key);
+            continue;
+        }
+
         // Parse count (-1 = use game default, 0-10 = override)
         count = str_to_num(value);
         if (count < -1) count = -1;
@@ -342,6 +376,30 @@ load_config() {
 
     fclose(file);
     log_amx("[KTPGrenadeLoadout] Loaded %d class grenade settings from config", loaded);
+}
+
+// Truncate at the first ';', '#', or "//" so inline comments don't fail validation
+strip_inline_comment(str[]) {
+    for (new i = 0; str[i]; i++) {
+        if (str[i] == ';' || str[i] == '#' || (str[i] == '/' && str[i + 1] == '/')) {
+            str[i] = '^0';
+            return;
+        }
+    }
+}
+
+// Strict integer check — str_to_num("abc") is 0, which would read as "strip grenades"
+bool:is_valid_count(const str[]) {
+    new i = 0;
+    if (str[0] == '-')
+        i = 1;
+    if (!str[i])
+        return false;
+    for (; str[i]; i++) {
+        if (!isdigit(str[i]))
+            return false;
+    }
+    return true;
 }
 
 find_class_by_name(const name[]) {

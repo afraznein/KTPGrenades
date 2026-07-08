@@ -6,6 +6,11 @@
 // This plugin reduces grenade damage by a configurable percentage.
 // Uses the dod_damage_pre forward from DODX module.
 //
+// PLATFORM CONTRACT: dod_damage_pre is an ET_CONTINUE forward — DODX applies
+// the HIGHEST return value across plugins. If a second damage-modifier plugin
+// ever ships, the LEAST reduction silently wins. The single-modifier
+// assumption is load-bearing.
+//
 
 #include <amxmodx>
 #include <dodx>
