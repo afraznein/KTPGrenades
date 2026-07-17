@@ -1,5 +1,7 @@
 # KTPGrenades - Claude Code Context
 
+**REQUIRED: Before writing or modifying any code in this repo, invoke the `plugin-dev` skill** (`.claude/skills/plugin-dev/SKILL.md`). It carries the two-plugin build/version conventions and deploy workflow; do not edit either .sma without it loaded.
+
 Combined grenade-related plugins for KTP Day of Defeat servers.
 
 ## Plugins in This Repository
