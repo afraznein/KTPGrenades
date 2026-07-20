@@ -43,6 +43,9 @@ KTPGrenades/
   compiled/                  # Compiled .amxx output
   data/
     grenade_loadout.ini      # Sample loadout config
+  tests/
+    config_parse/            # pytest schema guard for grenade_loadout.ini
+  .github/workflows/         # Tier 1 smoke + config-parse CI
   CHANGELOG_Loadout.md       # Loadout version history
   CHANGELOG_Damage.md        # Damage version history
 ```
@@ -74,16 +77,19 @@ marksman = 1
 ```
 
 - Use -1 or omit entry to keep game default
-- Maximum count: 10
+- Maximum count: 10 (numeric out-of-range values are clamped silently; non-numeric are rejected with a log line)
 - Class names are case-insensitive
+- Section headers are cosmetic — the parser skips `[...]` lines and matches class names globally, so a duplicated class key is last-wins across the whole file
 
 ### Cvars
 | Cvar | Default | Description |
 |------|---------|-------------|
 | `ktp_grenade_loadout` | 1 | Enable/disable plugin |
+| `ktp_grenade_loadout_debug` | 0 | Verbose per-spawn logging. Off in production — disk I/O on the game thread |
 
 ### Dependencies
-- KTPAMXX 2.6.6+ with DODX module (`dodx_set_grenade_ammo`, `dodx_give_grenade`, `dodx_send_ammox`)
+- KTPAMXX with DODX module (`dodx_set_grenade_ammo`, `dodx_give_grenade`, `dodx_send_ammox`) and the `dod_client_spawn` forward
+- `ktp_version_reporter.inc` from the KTPAMXX include tree. Both plugins include it, so the long-stated "2.6.6+" floor is understated — an include tree without that file fails to compile. Exact minimum release unconfirmed.
 
 ---
 
@@ -93,7 +99,7 @@ marksman = 1
 | Cvar | Default | Description |
 |------|---------|-------------|
 | `ktp_grenade_dmg` | 1 | Enable/disable damage reduction |
-| `ktp_grenade_dmg_reduce` | 50 | Reduction percentage (0-100) |
+| `ktp_grenade_dmg_reduce` | 50 | Reduction percentage (0-100). Cached at `plugin_cfg` — rcon changes take effect next map change, silently. `ktp_grenade_dmg` is live |
 
 ### How It Works
 1. DODX fires `dod_damage_pre` forward before finalizing damage

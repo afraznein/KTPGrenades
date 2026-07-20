@@ -2,8 +2,10 @@
 
 The plugin reads per-class grenade counts from this INI; missing or
 malformed entries silently fall back to game-default loadouts. Catches:
-  - typos in section names (only `[allies]`, `[axis]`, `[british]` are
-    enforced — anything else is silently ignored)
+  - typos in section names. Sections are cosmetic to the plugin — it skips
+    every `[...]` line and matches class names globally — so this test
+    enforces `[allies]`/`[axis]`/`[british]` for human readability only,
+    not because the plugin distinguishes them.
   - out-of-range counts (header docstring says -1..10; a value of 99 here
     silently saturates at the plugin's MAX without warning)
   - non-integer values
@@ -20,7 +22,8 @@ from .conftest import REPO_ROOT
 
 CONFIG_PATH = REPO_ROOT / "data" / "grenade_loadout.ini"
 
-# Sections the plugin recognizes. Anything else parses but does nothing.
+# Conventional groupings. The plugin ignores section headers entirely and
+# resolves class names globally; this set is a readability convention.
 ALLOWED_SECTIONS = {"allies", "axis", "british"}
 
 # Range from the file's own header documentation: "-1 or omit entry to use
@@ -54,7 +57,8 @@ def test_only_allowed_sections_present(parsed):
     extra = set(parsed.sections()) - ALLOWED_SECTIONS
     assert not extra, (
         f"{CONFIG_PATH.name}: unexpected sections {sorted(extra)}; "
-        f"only {sorted(ALLOWED_SECTIONS)} are recognized by the plugin"
+        f"only {sorted(ALLOWED_SECTIONS)} are used by convention "
+        f"(the plugin ignores sections entirely — this is a readability check)"
     )
 
 

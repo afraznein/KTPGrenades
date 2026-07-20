@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Documentation
+
+Doc-only pass; no plugin logic changed.
+
+- **Added the `ktp_grenade_loadout_debug` cvar to the README.** It has existed
+  since 1.0.5 but was never promoted out of the changelog, so the CVAR table
+  listed one cvar when there are two. Documented with the production warning —
+  that path is disk I/O on the game thread.
+- **Corrected clamp-vs-reject.** The README read as if `-1`..`10` were enforced.
+  Only non-numeric values are rejected; numeric out-of-range values are clamped
+  silently. The CI test already had this right.
+- **Documented that INI sections are cosmetic.** The parser skips every `[...]`
+  line and matches class names globally, so grouping is convention only and a
+  duplicated class key is last-wins across the whole file. The README, the
+  config-test docstrings, and the CI workflow header all described sections as
+  enforced. Note the per-section duplicate check in `test_grenade_loadout_ini.py`
+  is narrower than the plugin's global resolution.
+- Installation now points at the shipped `data/grenade_loadout.ini` sample and
+  labels the inline block an example — the two differ, and nothing said which
+  was authoritative.
+- Requirements now name the `ktp_version_reporter` include and the
+  `dod_client_spawn` forward (this plugin's entry point). Flagged that the stated
+  "KTPAMXX 2.6.6+" floor is understated because of that include; the exact
+  minimum release is unconfirmed.
+- Compiling section notes this repo is the stack's `compile.sh` exception —
+  two plugins, two build scripts.
+- Not logged when it shipped: `SPAWN_DELAY` moved 0.2s → 0.5s in 1.0.2. The
+  1.0.2 entry records only the HUD-sync fix; source is `0.5`. Recorded here
+  rather than editing the historical entry.
+
 ## [1.0.9] - 2026-07-08
 
 ### Fixed

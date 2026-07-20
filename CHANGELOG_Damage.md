@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Documentation
+
+Doc-only pass; no plugin logic changed.
+
+- **`ktp_grenade_dmg_reduce` was documented as if it were live.** It is read once
+  into `g_fCachedReduction` at `plugin_cfg` and the damage path only ever reads
+  the cache, so an rcon change mid-match does nothing until the next map — with
+  no error and no feedback. Worse, `ktp_grenade_dmg` in the same table *is* live,
+  so two adjacent rows behaved differently with nothing to distinguish them. The
+  caching is deliberate (1.0.4, to avoid a cvar read per damage event); it just
+  never reached the README. Caveat added.
+- README license line no longer links a `LICENSE` file — none is tracked. The
+  repo is public, so it asserted GPL-2.0 with no license text behind it and a
+  404 link. Stated inline pending a real license file.
+
 ## [1.0.5 docs note] - 2026-07-08
 
 - **Platform contract documented (no code change, stays 1.0.5):** `dod_damage_pre` is an ET_CONTINUE forward — DODX applies the highest return value across plugins, so if a second damage-modifier plugin ever ships, the least reduction silently wins. The single-modifier assumption is load-bearing. Noted in the source header and README.

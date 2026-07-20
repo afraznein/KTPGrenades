@@ -1,9 +1,10 @@
 # KTP Tier 1 — config-parse tests (per-plugin)
 #
 # Validates the schema of `data/grenade_loadout.ini`. Catches typos in
-# section names (only allies/axis/british are recognized — anything else
-# is silently ignored), out-of-range counts, and duplicate keys (which
-# configparser silently last-wins on).
+# section names (the plugin ignores sections and matches class names
+# globally — allies/axis/british is a readability convention this test
+# enforces), out-of-range counts, and duplicate keys (which configparser
+# silently last-wins on).
 
 name: config tests
 
