@@ -19,9 +19,12 @@ Doc-only pass; no plugin logic changed.
   so two adjacent rows behaved differently with nothing to distinguish them. The
   caching is deliberate (1.0.4, to avoid a cvar read per damage event); it just
   never reached the README. Caveat added.
-- README license line no longer links a `LICENSE` file — none is tracked. The
-  repo is public, so it asserted GPL-2.0 with no license text behind it and a
-  404 link. Stated inline pending a real license file.
+- **Licence is now actually shipped, and it is GPL-3.0, not GPL-2.0.** The repo is
+  public and asserted GPL-2.0 in the README with no licence text behind it — a
+  grant nobody could read, pointing at a 404. GPL-2.0 was also wrong: every other
+  KTP plugin that ships a licence is GPL-3, and these plugins build against
+  GPL-3 KTPAMXX headers, which GPL-2-only terms sit awkwardly against. `LICENSE`
+  (GPL-3.0) added and the README now links it.
 
 ## [1.0.5 docs note] - 2026-07-08
 

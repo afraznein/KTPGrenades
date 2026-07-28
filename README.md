@@ -174,7 +174,7 @@ wsl bash -c "cd '/mnt/n/Nein_/KTP Git Projects/KTPGrenades' && bash compile_dama
 
 ## License
 
-GPL-2.0. (No `LICENSE` file is tracked in this repo yet.)
+GPL-3.0 — see [LICENSE](LICENSE).
 
 ---
 
