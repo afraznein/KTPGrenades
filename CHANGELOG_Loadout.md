@@ -6,19 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.0.10] - 2026-08-09
+## [1.0.11] - 2026-08-09
 
-### Fixed
-- `dodx_set_grenade_ammo()`'s return was ignored — the same defect fixed for
-  `dodx_give_grenade()` in 1.0.9, one line below it. A 0 return means the ammo
-  write never landed, and the `dodx_send_ammox()` call immediately after would
-  then advertise a HUD count the player does not actually have. The failure is
-  now logged and `set_player_grenades()` returns false, so the client HUD and the
-  server agree rather than disagreeing silently.
-
-## [Unreleased]
+### Changed
+- Dropped the local `DODW_HANDGRENADE` / `DODW_STICKGRENADE` / `DODW_MILLS_BOMB`
+  defines in favour of the `dodconst.inc` enum that was already in scope. The
+  values were verified identical (13/14/36 against the enum ordinals), so this
+  is a no-op at runtime — but a hand-copied literal diverges with no compiler
+  error if the upstream enum is ever reordered or gains an insertion.
+  KTPGrenadeDamage already used the enum symbols directly; this makes the two
+  plugins consistent.
 
 ### Documentation
+*(Written earlier under an `[Unreleased]` heading that never carried a version;
+folded in here so the shipped tree has no unlabelled section.)*
+
 
 Doc-only pass; no plugin logic changed.
 
@@ -47,6 +49,18 @@ Doc-only pass; no plugin logic changed.
 - Not logged when it shipped: `SPAWN_DELAY` moved 0.2s → 0.5s in 1.0.2. The
   1.0.2 entry records only the HUD-sync fix; source is `0.5`. Recorded here
   rather than editing the historical entry.
+
+---
+
+## [1.0.10] - 2026-08-09
+
+### Fixed
+- `dodx_set_grenade_ammo()`'s return was ignored — the same defect fixed for
+  `dodx_give_grenade()` in 1.0.9, one line below it. A 0 return means the ammo
+  write never landed, and the `dodx_send_ammox()` call immediately after would
+  then advertise a HUD count the player does not actually have. The failure is
+  now logged and `set_player_grenades()` returns false, so the client HUD and the
+  server agree rather than disagreeing silently.
 
 ## [1.0.9] - 2026-07-08
 

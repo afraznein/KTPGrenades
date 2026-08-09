@@ -1,9 +1,9 @@
-/* KTP Grenade Loadout v1.0.10
+/* KTP Grenade Loadout v1.0.11
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.10
- * DATE: 2026-07-08
+ * VERSION: 1.0.11
+ * DATE: 2026-08-09
  *
  * ========== FEATURES ==========
  * - Configure grenade counts per class via INI file
@@ -36,6 +36,12 @@
  *   ...
  *
  * ========== CHANGELOG ==========
+ *
+ * v1.0.11 (2026-08-09) - Use the dodconst.inc weapon enum, drop the local copies
+ *   * CLEANUP: the local DODW_HANDGRENADE/STICKGRENADE/MILLS_BOMB defines
+ *     shadowed the dodconst.inc enum already in scope. Same values today, but a
+ *     literal copy diverges silently if the upstream enum ever shifts.
+ *     KTPGrenadeDamage already uses the enum directly. No behaviour change.
  *
  * v1.0.10 (2026-08-09) - dodx_set_grenade_ammo return value
  *   * FIXED: return was ignored -- the same defect 1.0.9 fixed for
@@ -108,16 +114,11 @@
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.10"
+#define PLUGIN_VERSION "1.0.11"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Task IDs
 #define TASK_BATCH_SPAWN     7033
-
-// Grenade weapon IDs from dodconst.inc
-#define DODW_HANDGRENADE  13
-#define DODW_STICKGRENADE 14
-#define DODW_MILLS_BOMB   36
 
 // Default grenade count if not specified in config
 #define DEFAULT_GRENADE_COUNT 1
