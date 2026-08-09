@@ -102,7 +102,7 @@
 #define AMMOSLOT_STICKGRENADE 11
 
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.9"
+#define PLUGIN_VERSION "1.0.10"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Task IDs
@@ -291,8 +291,13 @@ set_player_grenades(id) {
         }
     }
 
-    // Set the grenade count
-    dodx_set_grenade_ammo(id, grenadeType, grenadeCount);
+    // Same failure class as the give above: a 0 here means the ammo never landed,
+    // so the HUD write below would advertise a count the player does not have.
+    if (!dodx_set_grenade_ammo(id, grenadeType, grenadeCount)) {
+        log_amx("[KTPGrenadeLoadout] dodx_set_grenade_ammo failed player=%d class=%d type=%d count=%d",
+            id, class, grenadeType, grenadeCount);
+        return false;
+    }
 
     // Send AmmoX message to update client HUD
     new ammoSlot = (grenadeType == DODW_STICKGRENADE) ? AMMOSLOT_STICKGRENADE : AMMOSLOT_HANDGRENADE;

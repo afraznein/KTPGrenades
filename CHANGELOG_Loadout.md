@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.10] - 2026-08-09
+
+### Fixed
+- `dodx_set_grenade_ammo()`'s return was ignored — the same defect fixed for
+  `dodx_give_grenade()` in 1.0.9, one line below it. A 0 return means the ammo
+  write never landed, and the `dodx_send_ammox()` call immediately after would
+  then advertise a HUD count the player does not actually have. The failure is
+  now logged and `set_player_grenades()` returns false, so the client HUD and the
+  server agree rather than disagreeing silently.
+
 ## [Unreleased]
 
 ### Documentation
