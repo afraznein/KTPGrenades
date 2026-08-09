@@ -1,8 +1,8 @@
-/* KTP Grenade Loadout v1.0.9
+/* KTP Grenade Loadout v1.0.10
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.9
+ * VERSION: 1.0.10
  * DATE: 2026-07-08
  *
  * ========== FEATURES ==========
