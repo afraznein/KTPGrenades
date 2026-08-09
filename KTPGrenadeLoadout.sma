@@ -37,6 +37,12 @@
  *
  * ========== CHANGELOG ==========
  *
+ * v1.0.10 (2026-08-09) - dodx_set_grenade_ammo return value
+ *   * FIXED: return was ignored -- the same defect 1.0.9 fixed for
+ *     dodx_give_grenade, one line below it. A 0 return means the ammo never
+ *     landed, so the dodx_send_ammox that followed advertised a HUD count the
+ *     player does not have.
+ *
  * v1.0.9 (2026-07-08) - Config Validation + Native Failure Logging
  *   * FIXED: dodx_give_grenade return was ignored — 0 (entity/spawn failure)
  *            and -1 (pickup refused, entity removed) now log a failure line
