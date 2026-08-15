@@ -36,8 +36,14 @@ checked right before the call narrows the race window but does not close it.
 - **Always capture and check the return value.** On failure, log a line naming
   player/class/weapon-type/count (match the pattern already used for
   `dodx_give_grenade` in Loadout) — the native itself does not log.
-- If a write fails, don't let a later HUD-update call (`dodx_send_ammox()`, etc.)
-  advertise a count the server never actually set. Skip or correct it.
+- If a write fails, don't let anything downstream advertise a count the server
+  never actually set — skip it, or bail as `set_player_grenades` does.
+- **Do not send AmmoX by hand.** 1.0.12 removed the last `dodx_send_ammox` call:
+  DODX 2.7.29 stopped writing `m_rgAmmoLast`, so the DLL's own `SendAmmoUpdate`
+  diffs the pair each frame and emits for the slot it actually wrote. A plugin
+  message is a second, unsynchronised writer of the same client counter.
+- `dodx_get_grenade_ammo` returns **-1**, not 0, on failure since 2.7.29 — test a
+  count with `<= 0` if an unreadable one must take the same path as an empty one.
 - Before adding any new dodx setter-native call in either plugin, check whether
   its return value can indicate failure and wire up the same log-on-failure
   pattern — this class of bug generalizes to any dodx setter, not just grenades.
