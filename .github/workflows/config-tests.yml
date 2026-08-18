@@ -9,17 +9,14 @@
 name: config tests
 
 on:
+  # No `paths-ignore` filter -- the job below is a REQUIRED status check.
+  # A path-filtered workflow never fires on a docs-only PR, so the check
+  # never reports and the PR cannot be merged without an --admin override.
+  # This suite is sub-second, so firing on every PR costs nothing; the
+  # filter costs a branch nobody can merge.
   push:
     branches: ['**']
-    paths:
-      - 'data/*.ini'
-      - 'tests/config_parse/**'
-      - '.github/workflows/config-tests.yml'
-  pull_request:
-    paths:
-      - 'data/*.ini'
-      - 'tests/config_parse/**'
-      - '.github/workflows/config-tests.yml'
+  pull_request: {}
   workflow_dispatch:
 
 concurrency:
