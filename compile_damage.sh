@@ -44,7 +44,12 @@ fi
 KTPAMXX_BUILD="$KTPAMXX_DIR/obj-linux/packages/base/addons/ktpamx/scripting"
 KTPAMXX_INCLUDES="$KTPAMXX_DIR/plugins/include"
 
-SCRIPT_DIR="/mnt/n/Nein_/KTP Git Projects/KTPGrenades"
+# Handle both direct execution and piped execution
+if [ -n "${BASH_SOURCE[0]}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+    SCRIPT_DIR="/mnt/n/Nein_/KTP Git Projects/KTPGrenades"
+fi
 PLUGIN_NAME="KTPGrenadeDamage"
 OUTPUT_DIR="$SCRIPT_DIR/compiled"
 # Staging is the maintainer's local test tree; overridable, and every
