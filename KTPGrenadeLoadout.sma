@@ -1,9 +1,9 @@
-/* KTP Grenade Loadout v1.0.11
+/* KTP Grenade Loadout v1.0.12
  * Customizable grenade loadouts per class via INI config
  *
  * AUTHOR: Nein_
- * VERSION: 1.0.11
- * DATE: 2026-08-09
+ * VERSION: 1.0.12
+ * DATE: 2026-08-15
  *
  * ========== FEATURES ==========
  * - Configure grenade counts per class via INI file
@@ -12,7 +12,11 @@
  * - Works in extension mode (no Metamod required)
  *
  * ========== REQUIREMENTS ==========
- * - KTPAMXX 2.6.6+ with DODX module (grenade ammo natives, dodx_give_grenade)
+ * - KTPAMXX 2.7.29+ with DODX module (grenade ammo natives, dodx_give_grenade).
+ *   2.7.29 is a hard floor since 1.0.12: older DODX suppresses the DLL's own
+ *   AmmoX, and this plugin no longer sends a replacement. Behaviour against an
+ *   older module is UNDEFINED, not merely degraded -- 2.7.27 also addresses
+ *   m_rgAmmo one int low, so its ammo writes land on the wrong slot anyway.
  *
  * ========== CONFIG FILE ==========
  * Location: addons/ktpamx/configs/grenade_loadout.ini
@@ -36,6 +40,17 @@
  *   ...
  *
  * ========== CHANGELOG ==========
+ *
+ * v1.0.12 (2026-08-15) - Drop the manual AmmoX; the DLL emits its own
+ *   * FIXED: the manual AmmoX was only ever needed because DODX wrote
+ *     m_rgAmmoLast, which suppressed the DLL's own AmmoX -- SendAmmoUpdate
+ *     diffs the pair every frame. DODX 2.7.29 stopped writing it, so the DLL
+ *     now emits for the slot it actually wrote and the extra message is a
+ *     second, unsynchronised writer of the same client counter.
+ *   * The 9/11 constants themselves were RIGHT -- DoD precaches all weapons in
+ *     a fixed order, so they are invariant, and 2.7.29 keeps them as its own
+ *     fallback. Removing the message is about ownership, not a wrong constant.
+ *   * ORDERING: must not ship before DODX 2.7.29 is live on the fleet.
  *
  * v1.0.11 (2026-08-09) - Use the dodconst.inc weapon enum, drop the local copies
  *   * CLEANUP: the local DODW_HANDGRENADE/STICKGRENADE/MILLS_BOMB defines
@@ -109,12 +124,8 @@
 #include <dodconst>
 #include <ktp_version_reporter>
 
-// Ammo slots for grenades (from DODX weaponData in NBase.cpp)
-#define AMMOSLOT_HANDGRENADE 9
-#define AMMOSLOT_STICKGRENADE 11
-
 #define PLUGIN_NAME    "KTP Grenade Loadout"
-#define PLUGIN_VERSION "1.0.11"
+#define PLUGIN_VERSION "1.0.12"
 #define PLUGIN_AUTHOR  "Nein_"
 
 // Task IDs
@@ -286,8 +297,10 @@ set_player_grenades(id) {
     // Get current count to check if we need to give weapon
     new currentCount = dodx_get_grenade_ammo(id, grenadeType);
 
-    // For classes without default grenades, give weapon first
-    if (currentCount == 0 && grenadeCount > 0) {
+    // For classes without default grenades, give weapon first. <= 0 because
+    // 2.7.29 changed the getter's failure return from 0 to -1, and an
+    // unreadable count must still take the give path rather than skip it.
+    if (currentCount <= 0 && grenadeCount > 0) {
         // 0 = entity create/spawn failed or player died; -1 = pickup refused,
         // entity removed. Either way the ammo write below may land on a player
         // with no grenade weapon slot — log it, don't fail silently.
@@ -299,16 +312,16 @@ set_player_grenades(id) {
     }
 
     // Same failure class as the give above: a 0 here means the ammo never landed,
-    // so the HUD write below would advertise a count the player does not have.
+    // so this player was not modified and must not be counted as one.
     if (!dodx_set_grenade_ammo(id, grenadeType, grenadeCount)) {
         log_amx("[KTPGrenadeLoadout] dodx_set_grenade_ammo failed player=%d class=%d type=%d count=%d",
             id, class, grenadeType, grenadeCount);
         return false;
     }
 
-    // Send AmmoX message to update client HUD
-    new ammoSlot = (grenadeType == DODW_STICKGRENADE) ? AMMOSLOT_STICKGRENADE : AMMOSLOT_HANDGRENADE;
-    dodx_send_ammox(id, ammoSlot, grenadeCount);
+    // No manual AmmoX: dodx_set_grenade_ammo writes m_rgAmmo alone, so the DLL's
+    // own SendAmmoUpdate diffs it against m_rgAmmoLast and emits the HUD update
+    // for the slot it actually wrote. Requires DODX 2.7.29+.
 
     // Debug logging (expensive - only when explicitly enabled)
     if (g_bDebug) {

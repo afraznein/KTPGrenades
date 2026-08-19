@@ -8,21 +8,28 @@ Grenade-related plugins for Day of Defeat servers running KTPAMXX.
 
 | Plugin | Version | Description |
 |--------|---------|-------------|
-| **KTPGrenadeLoadout** | 1.0.11 | Per-class grenade loadout configuration via INI file |
+| **KTPGrenadeLoadout** | 1.0.12 | Per-class grenade loadout configuration via INI file |
 | **KTPGrenadeDamage** | 1.0.5 | Grenade damage reduction by configurable percentage |
 
 ---
 
 ## Requirements
 
-- **KTPAMXX 2.6.6+** with DODX module containing:
+- **KTPAMXX 2.7.29+** with DODX module containing:
   - `dodx_set_grenade_ammo()` / `dodx_get_grenade_ammo()`
-  - `dodx_send_ammox()`
   - `dodx_give_grenade()`
   - `dod_damage_pre` forward (Damage plugin)
   - `dod_client_spawn` forward (Loadout plugin — its entire entry point)
+
+  **2.7.29 is the Loadout floor since 1.0.12, and it does not fail loudly.**
+  Older DODX writes `m_rgAmmoLast` alongside `m_rgAmmo`, which suppresses the
+  game DLL's own `AmmoX`; 1.0.12 dropped the manual `dodx_send_ammox()` that used
+  to paper over that. On an older module the plugin still loads, but behaviour is
+  **undefined, not merely degraded**: 2.7.27 also addresses `m_rgAmmo` one int
+  low (base 289 + adjust 4 = slot 8, not 9), so its ammo writes miss the right
+  slot with or without this change. **Ship the module first.**
 - **`ktp_version_reporter.inc`** from the KTPAMXX include tree. Both plugins include it,
-  so the "2.6.6+" floor above is understated: any include tree without that file fails to
+  so the floor above is understated: any include tree without that file fails to
   compile. Exact minimum release unconfirmed.
 
 Both plugins report name/version/build SHA/build time through the fleet-wide

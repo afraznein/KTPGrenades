@@ -88,8 +88,8 @@ marksman = 1
 | `ktp_grenade_loadout_debug` | 0 | Verbose per-spawn logging. Off in production — disk I/O on the game thread |
 
 ### Dependencies
-- KTPAMXX with DODX module (`dodx_set_grenade_ammo`, `dodx_give_grenade`, `dodx_send_ammox`) and the `dod_client_spawn` forward
-- `ktp_version_reporter.inc` from the KTPAMXX include tree. Both plugins include it, so the long-stated "2.6.6+" floor is understated — an include tree without that file fails to compile. Exact minimum release unconfirmed.
+- KTPAMXX **2.7.29+** with DODX module (`dodx_set_grenade_ammo`, `dodx_give_grenade`) and the `dod_client_spawn` forward. The 2.7.29 floor does not fail loudly: older DODX writes `m_rgAmmoLast` and suppresses the DLL's own `AmmoX`, so the grenade HUD count stops moving (1.0.12 removed the manual `dodx_send_ammox` that covered for that). Behaviour on an older module is **undefined, not merely degraded** — 2.7.27 also addresses `m_rgAmmo` one int low, so its ammo writes miss the right slot regardless. **Stage the module before this plugin.**
+- `ktp_version_reporter.inc` from the KTPAMXX include tree. Both plugins include it, so the long-stated floor is understated — an include tree without that file fails to compile. Exact minimum release unconfirmed.
 
 ---
 
