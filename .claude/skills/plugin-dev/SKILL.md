@@ -17,6 +17,11 @@ change independently — treat them as siblings, not one plugin.
   in each instance's plugins dir and swap at the 03:00 ET nightly restart. Never
   hot-swap the live `.amxx`.
 - Run the `ktp-code-review` agent on any nontrivial change BEFORE compiling for deploy.
+- **Never switch `ktp_grenade_loadout` off in response to `ret=-1` log volume.**
+  Those lines do not establish that the give failed (see below), and disabling the
+  plugin silently reverts every class to the game's default grenade count — a real
+  gameplay change, made across an entire host, on the strength of a log line that
+  may be reporting nothing wrong.
 
 ## Two plugins, two compile scripts, two changelogs
 - `compile_loadout.sh` builds `KTPGrenadeLoadout.sma` only.
@@ -47,6 +52,37 @@ checked right before the call narrows the race window but does not close it.
 - Before adding any new dodx setter-native call in either plugin, check whether
   its return value can indicate failure and wire up the same log-on-failure
   pattern — this class of bug generalizes to any dodx setter, not just grenades.
+
+## `dodx_give_grenade`'s `-1` is UNRESOLVED — the convention is provisional
+`CHANGELOG_Loadout.md` and the call-site comment both read `-1` as "pickup
+refused, entity removed". That is a working convention, not a decoded return
+value, and it should keep saying so. The native infers success from whether the
+weapon entity's `solid` field changed across `pfnTouch`, and that single signal
+cannot separate a refused pickup from a give that succeeded by transferring ammo
+into a slot the player already held. Settling it needs a DODX change — test
+possession before creating the entity, return a distinct code — so nothing done
+in this repo will resolve it. Don't let a tidying pass promote the convention to
+a documented meaning, and don't harden a check around it.
+
+- **Loadout is the origin of every `ret=-1` line the fleet produces.** It is the
+  only call site in the stack that logs on `!= 1`; the sibling plugins log only
+  on `0`. That corpus has already been misattributed to KTPPracticeMode, which
+  inverted its meaning and got a fix rejected in review — name the plugin before
+  reasoning from the volume, and expect the volume to track player count rather
+  than any host or config.
+- **The `currentCount <= 0` gate is what makes those lines evidence.** Because the
+  give only fires when the player's count reads empty or unreadable, "the player
+  already holds one" is impossible at this site, which is what makes its `-1`s
+  unambiguous — and therefore the strongest argument *against* reading `-1` as
+  benign. Widening or removing that gate destroys the evidentiary value of the log
+  without touching a line of logging code. If you rework the give path, keep the
+  gate or say plainly what replaced it.
+- **`dodx.ini`'s `pdata_offset` is excluded as a cause — don't re-test it.** The
+  give native reads no pdata offsets; only `dodx_strip_grenade` does. The
+  hypothesis also has a live counter-example: a host carrying an explicit offset
+  override logged the same failures in quantity. Offsets are the obvious first
+  guess on meeting this log line, which is exactly why the exclusion is written
+  down.
 
 ## Weapon-ID constants: use dodconst.inc, don't shadow it
 `dodconst.inc` (already included by both plugins) declares `DODW_HANDGRENADE`,
