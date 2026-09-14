@@ -4,6 +4,9 @@
 
 Combined grenade-related plugins for KTP Day of Defeat servers.
 
+**A design that ships as a document is NOT done** — every proposal in a docs-only PR becomes a
+tracked board item in the same act (operator ruling 2026-09-14). See `DESIGN_DOCS_ARE_NOT_DONE.md`.
+
 ## Plugins in This Repository
 
 | Plugin | Source | Description |
